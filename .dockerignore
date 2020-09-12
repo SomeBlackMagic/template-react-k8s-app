@@ -1,0 +1,13 @@
+.git
+.idea
+.pipelines
+.gitlab-ci-functions
+.helm
+.gitmodules
+run
+
+.docker/config.json
+.helm/cluster.yaml
+node_modules
+*/**/Dockerfile
+.dockerignore

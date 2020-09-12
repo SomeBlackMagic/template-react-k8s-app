@@ -1,0 +1,20 @@
+version: "3.7"
+
+services:
+  app:
+    user: ${DOCKER_UID:-1000}:${DOCKER_GID:-1000}
+    image: ${DOCKER_SERVER_HOST}:${DOCKER_SERVER_PORT}/${DOCKER_PROJECT_PATH}/node${DOCKER_NODE_VERSION}-dev:${DOCKER_IMAGE_VERSION}
+    restart: on-failure
+    command: ["yarn", "run", "start"]
+    working_dir: /app
+    volumes:
+      -  ~/.cache/yarn/:/home/node/.cache/yarn/:rw
+      - ./:/app:delegated
+    ports:
+      - ${WEB_PORT:-3000}:3000
+    networks:
+      - demo
+
+networks:
+  demo:
+    external: true

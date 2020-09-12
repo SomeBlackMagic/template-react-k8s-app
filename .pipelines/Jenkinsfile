@@ -1,0 +1,94 @@
+pipeline {
+    agent any
+    environment {
+        //GLOBAL vars
+        KUBE_NAMESPACE_PREFIX='app-react-demo'
+        KUBE_INGRESS_PATH='/'
+        CI_PROJECT_NAME='app-react-demo'
+        PROD_ENV='staging'
+        DEV_ENV='dev'
+        ADMIN_EMAIL='root@localhost'
+        //VAULT vars
+
+        CI_REGISTRY =      vault([path: 'kv/app/dev-stage', key: 'CI_REGISTRY', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        CI_REGISTRY_USER = vault([path: 'kv/app/dev-stage', key: 'CI_REGISTRY_USER', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        CI_JOB_TOKEN =     vault([path: 'kv/app/dev-stage', key: 'CI_JOB_TOKEN', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+
+        CF_EMAIL =   vault([path: 'kv/app/dev-stage', key: 'CF_EMAIL', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        CF_KEY =     vault([path: 'kv/app/dev-stage', key: 'CF_KEY', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+
+        DOCKER_SERVER_HOST =      vault([path: 'kv/app/dev-stage', key: 'DOCKER_SERVER_HOST', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        DOCKER_SERVER_PORT =      vault([path: 'kv/app/dev-stage', key: 'DOCKER_SERVER_PORT', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        DOCKER_PROJECT_PATH =     vault([path: 'kv/app/dev-stage', key: 'DOCKER_PROJECT_PATH', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        DOCKER_NODE_VERSION =      vault([path: 'kv/app/dev-stage', key: 'DOCKER_NODE_VERSION', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+
+        SENTRY_DSN =          vault([path: 'kv/app/dev-stage', key: 'SENTRY_DSN', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        SENTRY_AUTH_TOKEN =   vault([path: 'kv/app/dev-stage', key: 'SENTRY_AUTH_TOKEN', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        SENTRY_ORG =          vault([path: 'kv/app/dev-stage', key: 'SENTRY_ORG', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        SENTRY_PROJECT =      vault([path: 'kv/app/dev-stage', key: 'SENTRY_PROJECT', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+
+        KUBE_SERVER =                  vault([path: 'kv/app/dev-stage', key: 'KUBE_SERVER', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        KUBE_TOKEN =                   vault([path: 'kv/app/dev-stage', key: 'KUBE_TOKEN', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        KUBE_CLUSTER =                 vault([path: 'kv/app/dev-stage', key: 'KUBE_CLUSTER', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        KUBE_PROJECT =                 vault([path: 'kv/app/dev-stage', key: 'KUBE_PROJECT', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        KUBE_INGRESS_HOSTNAME_SUFFIX = vault([path: 'kv/app/dev-stage', key: 'KUBE_INGRESS_HOSTNAME_SUFFIX', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        KUBE_INGRESS_HOSTNAME =        vault([path: 'kv/app/dev-stage', key: 'KUBE_INGRESS_HOSTNAME', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+
+        //APP COMMON
+        APP_DEBUG =  vault([path: 'kv/app/dev-stage', key: 'APP_DEBUG', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+        APP_SECRET = vault([path: 'kv/app/dev-stage', key: 'APP_SECRET', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+
+        APP_SENTRY_DSN = vault([path: 'kv/app/dev-stage', key: 'APP_SENTRY_DSN', vaultUrl: 'https://vault.*******.net', engineVersion: "2", credentialsId: 'vaulttoken'])
+
+
+    }
+//     properties([
+//        # buildDiscarder(logRotator(daysToKeepStr: '3', numToKeepStr: '3')),
+//     ])
+     options {
+        ansiColor('xterm')
+     }
+    stages {
+       stage("building images") {
+           steps {
+               sh '''#!/bin/bash
+                set -e
+                set -u
+                set -o pipefail
+
+               . .gitlab-ci-functions/docker.sh
+               . .gitlab-ci-functions/kubernetes.sh
+               . .gitlab-ci-functions/mysql.sh
+               . .gitlab-ci-functions/misc.sh
+               . .gitlab-ci-functions/trycatch.sh
+
+                . ./.pipelines/transform_from_jenkins.sh
+
+                . ./.pipelines/before_step.sh
+                . ./.pipelines/build_images.sh
+                . ./.pipelines/app_image.sh
+                . ./.pipelines/app_test.sh
+                . ./.pipelines/prerequisites.sh
+                . ./.pipelines/app_deploy.sh
+               '''
+           }
+       }
+    }
+    post {
+        always {
+           echo 'This will run always'
+        }
+        success {
+           echo 'This will run only if successful'
+        }
+        failure {
+           echo 'This will run only if failed'
+        }
+        unstable {
+           echo 'This will run only if the run was marked as unstable.'
+        }
+        changed {
+           echo 'This will run only if the state of the Pipeline has changed'
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{{/*apiVersion: v1*/}}
+{{/*kind: ConfigMap*/}}
+{{/*metadata:*/}}
+{{/*    name: {{ template "nginx.fullname" . }}-server-block*/}}
+{{/*    labels: {{- include "nginx.labels" . | nindent 4 }}*/}}
+{{/*data:*/}}
+{{/*    monitoring.conf: |-*/}}
+{{/*{{ .Values.metrics.serverBlock | indent 4 }}*/}}
+{{/*{{- end }}*/}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: {{ template "nginx.fullname" . }}-server-block
+data:
+    server-block.conf: |-
+      {{ .Values.metrics.serverBlock | indent 4 }}
